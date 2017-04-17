@@ -1,15 +1,17 @@
 # This file provides an API to solve any sudoku (9x9 grid) using
 # constrant propagation techniques and search.
 #
+# The code is also available on https://github.com/xnutsive/AIND-Sudoku
+#
 # TODO
-# 1. [ ] Add Naked Twins implementation that passes the provided `sudoku_test`.
-# 2. [ ] Add a separate script loader that will solve more sudokus and track time
-# 3. [ ] Add more complex sudokus to the test
-# 4. [ ] Add only available box constraint to propagation
+# 1. [x] Add Naked Twins implementation that passes the provided `sudoku_test`.
+# 2. [x] Add a separate script loader that will solve more sudokus and track time => solution_test_from_file.
+# 3. [x] Add more complex sudokus to the test
+# 4. [x] Add only available box constraint to propagation
 # 5. [ ] Try implementing naked_twins for 3 or more digits?
-# 6. [ ] Write question answers in readme.md
-# 7. [ ] Describe my testing suite and additional algs implemented
-# 8. [ ] Upload for review
+# 6. [x] Write question answers in readme.md
+# 7. [x] Describe my testing suite and additional algs implemented
+# 8. [x] Upload for review
 #
 
 # FIXME
@@ -25,6 +27,7 @@ assignments = []
 
 rows = 'ABCDEFGHI'
 cols = '123456789'
+digits = '123456789'
 
 boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
@@ -97,11 +100,10 @@ def grid_values(grid):
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
     chars = []
-    digits = '123456789'
     for c in grid:
         if c in digits:
             chars.append(c)
-        if c == '.':
+        if c == '.' or c == '0':
             chars.append(digits)
     assert len(chars) == 81
     return dict(zip(boxes, chars))
@@ -124,11 +126,37 @@ def display(values):
 
 
 def eliminate(values):
-    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    solved_values = [box for box in boxes if len(values[box]) == 1]
     for box in solved_values:
         digit = values[box]
         for peer in peers[box]:
-            assign_value(values, peer, values[peer].replace(digit, ''))
+            if len(values[peer]) > 1:
+                assign_value(values, peer, values[peer].replace(digit, ''))
+
+    return values
+
+
+def only_square(values):
+    """
+    Find digits that only have one square to go to in each unit and fill them in. 
+    :param values: sudoku dict representation
+    :return: 
+    """
+
+    for unit in unitlist:
+        unsolved_boxes = [box for box in unit if len(values[box]) > 1]
+        solved_boxes = [box for box in unit if len(values[box]) == 1]
+        solved_digits = set([values[box] for box in solved_boxes])
+        unsolved_digits = [d for d in digits if d not in solved_digits]
+
+        for box in unsolved_boxes:
+            solved_digits_in_peers = [values[peer] for peer in peers[box] if len(values[peer]) == 1]
+            unsolved_digits_in_peers = [d for d in digits if d not in solved_digits_in_peers]
+            possible_digits_for_box = list(set(unsolved_digits) & set(unsolved_digits_in_peers))
+
+            if len(possible_digits_for_box) == 1:
+                assign_value(values, box, possible_digits_for_box[0])
+
     return values
 
 
@@ -147,6 +175,7 @@ def reduce_puzzle(values):
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
         values = eliminate(values)
         values = only_choice(values)
+        values = only_square(values)
         values = naked_twins(values)
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         stalled = solved_values_before == solved_values_after
@@ -175,6 +204,7 @@ def search(values):
 
 
 def solve(grid):
+
     """
     Find the solution to a Sudoku grid in a string representation. 
     Args:
@@ -183,8 +213,6 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
-
-    # Just default to search, it'll apply constraint prop when possible.
     return search(grid_values(grid))
 
 
