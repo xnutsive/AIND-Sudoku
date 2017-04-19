@@ -62,8 +62,7 @@ def from_file(filename, sep='\n'):
 #     about 99.8% of them are solvable. Some have multiple solutions."""
 #     values = dict((box, solution.digits) for box in solution.boxes)
 #     for b in shuffled(solution.boxes):
-#         if not solution.assign_value(values, b, random.choice(values[b])):
-#             break
+#         values[b] = random.choice(values[b])
 #         ds = [values[b] for b in solution.boxes if len(values[b]) == 1]
 #         if len(ds) >= N and len(set(ds)) >= 8:
 #             return ''.join(values[b] if len(values[b])==1 else '.' for b in solution.boxes)
@@ -77,6 +76,6 @@ def from_file(filename, sep='\n'):
 
 if __name__ == '__main__':
     solve_all(from_file("easy50.txt", '========'), "easy", None)
-    solve_all(from_file("top95.txt"), "hard", None)
-    solve_all(from_file("hardest.txt"), "hardest", None)
-    # solve_all([random_puzzle() for _ in range(99)], "random", 100.0)
+    # solve_all(from_file("top95.txt"), "hard", None)
+    # solve_all(from_file("hardest.txt"), "hardest", None)
+    solve_all([random_puzzle() for _ in range(199)], "random", 100.0)

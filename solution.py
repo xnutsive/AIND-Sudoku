@@ -38,11 +38,22 @@ square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', 
 diagonal_units = [[rows[i]+cols[i] for i in range(len(rows))], [rows[i]+cols[::-1][i] for i in range(len(rows))]]
 
 # Add diagonal_units to the unitlist.
-unitlist = row_units + column_units + square_units + diagonal_units
+unitlist = row_units + column_units + square_units # + diagonal_units
 
 # Units and peers will use diagonal units automatically.
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
+
+
+def validate(values):
+    "Validates sudoku"
+    for box in boxes: assert(len(values[box]) == 1)
+
+    for unit in unitlist:
+        digits = [values[box] for box in unit]
+        if len(set(digits)) != 9:
+            print("Validation failed for ", unit, digits)
+
 
 
 def assign_value(values, box, value):
@@ -130,8 +141,7 @@ def eliminate(values):
     for box in solved_values:
         digit = values[box]
         for peer in peers[box]:
-            if len(values[peer]) > 1:
-                assign_value(values, peer, values[peer].replace(digit, ''))
+            assign_value(values, peer, values[peer].replace(digit, ''))
 
     return values
 
@@ -219,7 +229,14 @@ def solve(grid):
 if __name__ == '__main__':
 
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-    display(solve(diag_sudoku_grid))
+
+    diag_failing = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
+
+    solved = solve(diag_failing)
+
+    display(solved)
+
+    validate(solved)
 
     try:
         from visualize import visualize_assignments
